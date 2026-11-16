@@ -62,3 +62,45 @@ def test_cors_allows_frontend():
         == 'http://localhost:5173'
     )
     assert 'POST' in response.headers['access-control-allow-methods']
+
+
+
+
+
+
+def test_invalid_hours_rejected():
+    response = client.post(
+        '/api/forecast',
+        json={'available_staff': 9, 'hours_per_staff': -1}
+    )
+    assert response.status_code == 422
+
+
+def test_staff_boundary_zero():
+    response = client.post(
+        '/api/forecast',
+        json={'available_staff': 0, 'hours_per_staff': 8}
+    )
+    assert response.status_code == 200
+    assert len(response.json()['forecast']) == 7
+
+
+def test_forecast_response_fields():
+    response = client.post(
+        '/api/forecast',
+        json={'available_staff': 9, 'hours_per_staff': 8}
+    )
+    assert response.status_code == 200
+
+    data = response.json()
+    required_fields = {
+        'date',
+        'patients',
+        'required_hours',
+        'capacity_hours',
+        'utilization_pct',
+        'risk',
+    }
+
+    for item in data['forecast']:
+        assert required_fields.issubset(item.keys())
