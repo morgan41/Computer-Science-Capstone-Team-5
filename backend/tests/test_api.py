@@ -104,3 +104,40 @@ def test_forecast_response_fields():
 
     for item in data['forecast']:
         assert required_fields.issubset(item.keys())
+
+
+
+
+
+
+
+
+
+def test_forecast_response_types_and_values():
+    response = client.post(
+        '/api/forecast',
+        json={'available_staff': 9, 'hours_per_staff': 8}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert isinstance(data['forecast'], list)
+    assert len(data['forecast']) == 7
+
+    for item in data['forecast']:
+        assert isinstance(item['date'], str)
+        assert isinstance(item['patients'], int)
+        assert item['patients'] >= 0
+
+        assert isinstance(item['required_hours'], (int, float))
+        assert item['required_hours'] >= 0
+
+        assert isinstance(item['capacity_hours'], (int, float))
+        assert item['capacity_hours'] >= 0
+
+        assert isinstance(item['utilization_pct'], (int, float))
+        assert item['utilization_pct'] >= 0
+
+        assert isinstance(item['risk'], str)
+        assert item['risk'] in ('Low', 'Moderate', 'High')
